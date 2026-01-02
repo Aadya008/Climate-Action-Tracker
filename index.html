@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Climate Action Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f8ff; }
+        h1, h2 { color: #2c6f4f; }
+        .section { background: #fff; padding: 20px; margin-bottom: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        canvas { background: #fafafa; border: 1px solid #ccc; border-radius: 5px; }
+    </style>
+</head>
+<body>
+    <h1>Climate Action Tracker</h1>
+
+    <!-- Carbon Footprint Calculator -->
+    <div class="section">
+        <h2>Calculate Your Carbon Footprint</h2>
+        <label>Electricity usage (kWh/month):</label>
+        <input type="number" id="electricity" value="100">
+        <label>Travel (miles/month):</label>
+        <input type="number" id="travel" value="100">
+        <label>Diet (1=Low, 2=Medium, 3=High impact):</label>
+        <input type="number" id="diet" value="2">
+        <button onclick="calculateFootprint()">Calculate</button>
+        <p>Your monthly carbon footprint: <span id="footprint">0</span> kg CO₂</p>
+    </div>
+
+    <!-- Progress Tracker Graph -->
+    <div class="section">
+        <h2>Progress Tracker</h2>
+        <canvas id="progressChart" width="400" height="200"></canvas>
+    </div>
+
+    <!-- Reports Section -->
+    <div class="section">
+        <h2>Your Reports</h2>
+        <button onclick="generateReport()">Generate Report</button>
+        <p id="report"></p>
+        <button onclick="shareReport()">Share via Text/Email</button>
+    </div>
+
+    <!-- Leaderboard Link -->
+    <div class="section">
+        <h2>Leaderboard</h2>
+        <p><a href="leaderboard.html" target="_blank">Go to Leaderboard & Share Link</a></p>
+    </div>
+
+    <script>
+        let footprints = [];
+
+        // ---- Calculate Carbon Footprint ----
+        function calculateFootprint() {
+            const electricity = parseFloat(document.getElementById('electricity').value);
+            const travel = parseFloat(document.getElementById('travel').value);
+            const diet = parseInt(document.getElementById('diet').value);
+            const footprint = (electricity * 0.4) + (travel * 0.8) + (diet * 50);
+            document.getElementById('footprint').textContent = footprint.toFixed(2);
+            footprints.push(footprint);
+            updateChart();
+            notifyUser(footprint);
+        }
+
+        // ---- Progress Chart ----
+        const ctx = document.getElementById('progressChart').getContext('2d');
+        const progressChart = new Chart(ctx, {
+            type: 'line',
+            data: { labels: [], datasets: [{ label: 'Monthly Carbon Footprint (kg CO₂)', data: [], backgroundColor: 'rgba(44,111,79,0.2)', borderColor: 'rgba(44,111,79,1)', borderWidth: 2, fill: true }] },
+            options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        function updateChart() {
+            progressChart.data.labels = footprints.map((_, i) => `Month ${i+1}`);
+            progressChart.data.datasets[0].data = footprints;
+            progressChart.update();
+        }
+
+        // ---- Notifications ----
+        function notifyUser(footprint) {
+            if (footprint > 200) alert("Warning: Your carbon footprint is high!");
+        }
+
+        // ---- Reports ----
+        function generateReport() {
+            const total = footprints.reduce((a,b)=>a+b,0).toFixed(2);
+            const avg = (total / footprints.length || 0).toFixed(2);
+            document.getElementById('report').textContent = `Total: ${total} kg CO₂ | Avg/month: ${avg} kg CO₂`;
+        }
+
+        function shareReport() {
+            const report = document.getElementById('report').textContent;
+            if (!report) { alert("Generate a report first!"); return; }
+            window.location.href = `mailto:?subject=My Carbon Footprint Report&body=${encodeURIComponent(report)}`;
+        }
+    </script>
+</body>
+</html>

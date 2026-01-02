@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; background: #f0f8ff; }
+        h1 { color: #2c6f4f; }
+        input, button { padding: 8px; margin: 5px 0; width: 100%; box-sizing: border-box; }
+        .leaderboard-item { margin-bottom: 5px; }
+        .section { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Global Leaderboard</h1>
+
+    <div class="section">
+        <label>Your Name:</label>
+        <input type="text" id="username">
+        <label>Your Carbon Footprint (kg CO₂):</label>
+        <input type="number" id="footprint">
+        <button onclick="addToLeaderboard()">Submit</button>
+        <p>Share this page with friends to add their results!</p>
+    </div>
+
+    <div class="section">
+        <h2>Leaderboard</h2>
+        <div id="leaderboard"></div>
+    </div>
+
+    <script>
+        // Load leaderboard from URL if exists
+        let leaderboard = [];
+
+        function updateURL() {
+            const encoded = encodeURIComponent(JSON.stringify(leaderboard));
+            history.replaceState(null, '', '?' + encoded);
+        }
+
+        function loadLeaderboard() {
+            const params = decodeURIComponent(window.location.search.substring(1));
+            if (params) {
+                try { leaderboard = JSON.parse(params); } catch(e){ console.error(e); leaderboard = []; }
+            }
+            renderLeaderboard();
+        }
+
+        function addToLeaderboard() {
+            const name = document.getElementById('username').value || "Anonymous";
+            const footprint = parseFloat(document.getElementById('footprint').value) || 0;
+
+            const index = leaderboard.findIndex(u => u.name === name);
+            if (index >= 0) leaderboard[index].score = footprint;
+            else leaderboard.push({ name, score: footprint });
+
+            // Sort: lower footprint = higher rank
+            leaderboard.sort((a,b) => a.score - b.score);
+            renderLeaderboard();
+            updateURL();
+        }
+
+        function renderLeaderboard() {
+            const container = document.getElementById('leaderboard');
+            container.innerHTML = '';
+            leaderboard.forEach((user,i)=>{
+                const div = document.createElement('div');
+                div.className = 'leaderboard-item';
+                div.textContent = `${i+1}. ${user.name} - ${user.score.toFixed(2)} kg CO₂`;
+                container.appendChild(div);
+            });
+        }
+
+        loadLeaderboard();
+    </script>
+</body>
+</html>
